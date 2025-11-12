@@ -5,3 +5,5 @@ This GitHub repository contains the source code, documentation, and 3D models fo
 
 - esp
 - lora
+
+## Safety measures
