@@ -7,3 +7,12 @@ This GitHub repository contains the source code, documentation, and 3D models fo
 - lora
 
 ## Safety measures
+## 🤝 Contribuindo
+
+Este projeto segue as **Boas Práticas do Serra Rocketry**. Antes de contribuir:
+
+1. 📖 Leia nosso [Guia de Boas Práticas](https://github.com/Serra-Rocketry/best-practices/blob/main/README.md)
+2. 🔄 Siga o fluxo: Fork → Branch → Pull Request
+3. 📝 Documente suas mudanças
+
+**Primeira vez contribuindo?** Não se preocupe! O guia explica tudo passo a passo.
