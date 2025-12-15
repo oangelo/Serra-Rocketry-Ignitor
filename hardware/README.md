@@ -14,7 +14,7 @@ Operada remotamente pelo operador (distância segura do foguete).
 
 **Componentes:**
 - 1x Raspberry Pi Pico
-- 1x Módulo LoRa 915 MHz
+- 1x Módulo LoRa SX1268 433 MHz
 - 1x Botão liga/desliga
 - 1x Botão de ignição (ação mantida por 5 s)
 - 3x LEDs: verde (ligado), amarelo (conectado), vermelho (ignição iminente)
@@ -33,7 +33,7 @@ Conectada fisicamente ao ignitor do foguete.
 
 **Componentes:**
 - 1x Raspberry Pi Pico
-- 1x Módulo LoRa 915 MHz
+- 1x Módulo LoRa SX1268 433 MHz
 - 3x LEDs: verde (ligado), amarelo (conectado), vermelho (ignição iminente)
 - 1x Buzzer ativo
 - 1x Relé ou MOSFET para acionamento do ignitor
@@ -45,16 +45,17 @@ Conectada fisicamente ao ignitor do foguete.
 | Componente | Quantidade | Referência | Especificação | Link |
 |------------|------------|------------|---------------|------|
 | Raspberry Pi Pico | 2 | MCU1, MCU2 | RP2040 | [Raspberry Pi](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
-| Módulo LoRa SX1276/SX1278 | 2 | LORA1, LORA2 | 915 MHz | [Hoperf](https://www.hoperf.com/) |
+| Módulo LoRa SX1268 | 2 | LORA1, LORA2 | 433 MHz | [Hoperf](https://www.hoperf.com/) |
 | LED Verde 5mm | 2 | LED_G1, LED_G2 | 20 mA | - |
 | LED Amarelo 5mm | 2 | LED_Y1, LED_Y2 | 20 mA | - |
 | LED Vermelho 5mm | 2 | LED_R1, LED_R2 | 20 mA | - |
 | Buzzer ativo 5V | 2 | BZ1, BZ2 | Piezo | - |
-| Botão táctil | 3 | BTN_PWR1, BTN_PWR2, BTN_IGN | Momentâneo NO | - |
+| Botão Liga/Desliga | 2 | BTN_PWR1, BTN_PWR2 | 12V 20A | - |
+| Botão de Ignição | 1 | BTN_IGN | 22mm, 3-9V (5V), Momentary Reset, Vermelho | - |
 | MOSFET/Relé | 1 | Q1/K1 | Para ignitor (corrente a definir) | - |
 | Bateria | 2 | BAT1, BAT2 | A definir (LiPo/18650) | - |
 | Resistores 220Ω | 6 | R1-R6 | Para LEDs | - |
-| Antena LoRa | 2 | ANT1, ANT2 | 915 MHz | - |
+| Antena LoRa | 2 | ANT1, ANT2 | 433 MHz | - |
 
 ## Pinagem Raspberry Pi Pico
 
@@ -143,6 +144,28 @@ Conectada fisicamente ao ignitor do foguete.
 - Operação normal (conectado): ~50 mA @ 3.3 V
 - Transmissão LoRa: ~120 mA (picos)
 - Autonomia estimada: 6-8 h com bateria 1000 mAh
+
+## Galeria de Componentes
+
+### Raspberry Pi Pico
+![Raspberry Pi Pico](./images/pipico.png)
+
+Microcontrolador dual-core ARM Cortex-M0+ (RP2040), 264KB SRAM, 2MB Flash.
+
+### Módulo LoRa SX1268
+![Módulo LoRa SX1268](./images/lora.png)
+
+Transceptor LoRa de longo alcance operando em **433 MHz**. Chip Semtech SX1268.
+
+### Botão Liga/Desliga
+![Botão Liga/Desliga](./images/power-button.avif)
+
+Botão de potência **12V 20A** para controle de energia das estações.
+
+### Botão de Ignição
+![Botão de Ignição](./images/ignition-button.png)
+
+Botão momentâneo (Momentary Reset), **22mm**, vermelho, **3-9V (5V)**. Usado exclusivamente na Estação de Comando para iniciar a sequência de ignição.
 
 ## Arquivos de Fabricação
 
