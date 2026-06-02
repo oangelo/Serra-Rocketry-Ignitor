@@ -529,14 +529,15 @@ class CommandStation:
     def _enter_arming(self): 
         self._press_start_ms = utime.ticks_ms()
         self._last_blink_ms  = self._press_start_ms
+        self._last_tx_ms     = utime.ticks_add(self._press_start_ms, -RETRANSMIT_MS)
+        self._ack_received   = False
         self.state = State.ARMING
         print("[CMD] Estado: ARMING — mantenha o botão por 5 s...")
 
     def _enter_transmitting(self):
         self._tx_start_ms = utime.ticks_ms()
         self._last_tx_ms  = 0
-        self._ack_received = False
-        self.led_red.value(0)
+        self.led_red.value(1 if self._ack_received else 0)
         self.state = State.TRANSMITTING
         print("[CMD] Estado: TRANSMITTING — mantendo ARM_CONFIRMED ativo.")
 
@@ -581,21 +582,43 @@ class CommandStation:
     def _handle_arming(self):
         # Se o botão for solto antes de 5 segundos, o processo é cancelado.
         if not self._button_pressed():
-            print("[CMD] Botão solto antes dos 5 s — cancelando.")
-            self._enter_idle()
+            print("[CMD] Botao solto antes dos 5 s - enviando ABORT.")
+            self._enter_aborting()
             return
+
+        now = utime.ticks_ms()
+
+        # Enquanto o botao estiver pressionado, mantem o receptor em contagem.
+        if utime.ticks_diff(now, self._last_tx_ms) >= RETRANSMIT_MS:
+            self._last_tx_ms = now
+            self.lora.send(MSG_ARM)
+
+        incoming = self.lora.receive()
+        if incoming == MSG_ACK:
+            if not self._ack_received:
+                self._ack_received = True
+                self.led_red.value(1)
+                print("[CMD] ACK recebido da base de ignicao.")
+        elif incoming == MSG_DONE:
+            self._enter_confirmed()
+            return
+        elif incoming == MSG_PING:
+            self.lora.send(MSG_PONG)
+        elif incoming == MSG_PONG:
+            self._last_pong_ms = now
+            self._link_ok = True
 
         # Enquanto o botão estiver pressionado, pisca LED amarelo e buzzer.
         self._blink_tick()
 
-        elapsed = utime.ticks_diff(utime.ticks_ms(), self._press_start_ms)
+        elapsed = utime.ticks_diff(now, self._press_start_ms)
         remaining = max(0, (HOLD_REQUIRED_MS - elapsed) // 1000)
 
         # Exibe uma atualização de tempo a cada segundo.
         if elapsed // 1000 != (elapsed - 50) // 1000:
             print(f"[CMD] Armando... {remaining} s restantes.")
 
-        # Se o tempo mínimo for atingido, inicia a transmissão.
+        # Se o tempo minimo for atingido, continua transmitindo ate o DONE.
         if elapsed >= HOLD_REQUIRED_MS:
             self._enter_transmitting()
 

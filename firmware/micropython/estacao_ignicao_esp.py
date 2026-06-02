@@ -61,17 +61,24 @@ PIN_LED_LINK_NUM     = 8   # LED interno do ESP32-C3 SuperMini
 # Em algumas placas o LED interno pode ser ativo em nivel baixo.
 LED_LINK_ACTIVE_LOW  = False
 
+# Ajuste para 0 caso seu modulo de rele seja acionado em nivel baixo.
+RELE_ACTIVE_LEVEL    = 1
+RELE_INACTIVE_LEVEL  = 0 if RELE_ACTIVE_LEVEL else 1
+
 # Pinos de controle do SX1278
 LORA_CS    = Pin(PIN_LORA_CS_NUM, Pin.OUT, value=1)  # NSS: HIGH = modulo desmarcado
 LORA_RESET = Pin(PIN_LORA_RESET_NUM, Pin.OUT, value=1)  # RESET: LOW por 10ms para resetar
 LORA_DIO0  = Pin(SPI_DIO0, Pin.IN)
 
 # Atuadores e Indicadores
-PIN_RELE         = Pin(PIN_RELE_NUM, Pin.OUT, value=0)  # Rele: garantido BAIXO no boot
+PIN_RELE         = Pin(PIN_RELE_NUM, Pin.OUT, value=RELE_INACTIVE_LEVEL)
 PIN_BUZZER       = Pin(PIN_BUZZER_NUM, Pin.OUT, value=0)
 PIN_LED_VERMELHO = Pin(PIN_LED_VERMELHO_NUM, Pin.OUT, value=0)  # Vermelho: Pisca em contagem/erro, ON ignicao
 PIN_LED_AMARELO  = Pin(PIN_LED_AMARELO_NUM, Pin.OUT, value=0)  # Amarelo: ON quando conectado/ativo
 PIN_LED_LINK     = Pin(PIN_LED_LINK_NUM, Pin.OUT, value=0)  # LED interno: status de conexao
+
+def _set_rele(ligado):
+    PIN_RELE.value(RELE_ACTIVE_LEVEL if ligado else RELE_INACTIVE_LEVEL)
 
 def _set_led_link(ligado):
     if LED_LINK_ACTIVE_LOW:
@@ -421,7 +428,7 @@ def sinalizar_erro(n=3):
 
 def desligar_tudo():
     # Estado Desligado: Todos os atuadores e LEDs OFF
-    PIN_RELE.value(0)
+    _set_rele(False)
     PIN_BUZZER.value(0)
     PIN_LED_VERMELHO.value(0)
     PIN_LED_AMARELO.value(0)
@@ -648,7 +655,7 @@ def executar():
                 PIN_LED_VERMELHO.value(1)
                 PIN_LED_AMARELO.value(1)
                 
-                PIN_RELE.value(1)
+                _set_rele(True)
                 t_inicio_ignicao = agora
                 estado = ESTADO_IGNICAO
 
@@ -659,7 +666,7 @@ def executar():
             decorrido_ignicao = utime.ticks_diff(agora, t_inicio_ignicao)
 
             if decorrido_ignicao >= TEMPO_IGNICAO_MS:
-                PIN_RELE.value(0)
+                _set_rele(False)
                 print("[IGNICAO] Rele desligado. Enviando telemetria...")
 
                 lora_send(MSG_DONE)
@@ -678,7 +685,7 @@ def executar():
         #  ESTADO: COMPLETO
         # ------------------------------------------------------------------
         elif estado == ESTADO_COMPLETO:
-            PIN_RELE.value(0)
+            _set_rele(False)
             utime.sleep_ms(3000)
             desligar_tudo()  # Volta pro estado Desligado antes de resetar
             estado = ESTADO_AGUARDANDO
