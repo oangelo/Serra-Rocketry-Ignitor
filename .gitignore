@@ -18,6 +18,9 @@ test/logs/
 .vscode/
 .idea/
 
+# Python cache
+__pycache__/
+
 # Artefatos genéricos
 *.d
 *.slo

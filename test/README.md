@@ -1,134 +1,125 @@
 # Plano de Testes
 
 ## Objetivos
-- Validar comunicação LoRa bidirecional entre as duas estações
-- Confirmar sequência de segurança (botão mantido por 5 s)
-- Testar feedback visual (LEDs) e sonoro (buzzers) em ambas estações
-- Verificar abort automático e manual
 
-## Testes Prioritários
+- Validar comunicacao LoRa bidirecional entre as estacoes.
+- Confirmar sequencia de seguranca com botao mantido por 5 s.
+- Testar feedback visual (LEDs) e sonoro (buzzers).
+- Verificar abort manual e abort por timeout.
 
-### 1. Comunicação LoRa Básica
-**Objetivo:** Confirmar que as duas estações se comunicam de forma confiável.
+## Requisito Inicial
 
-Checklist:
-- [ ] Estação de Comando envia `HEARTBEAT`, Estação de Ignição responde com `HEARTBEAT_ACK`
-- [ ] LED amarelo acende em ambas estações quando conectadas
-- [ ] RSSI da Estação de Ignição visível no serial monitor
-- [ ] Testar perda de comunicação: desligar uma estação e verificar timeout
+Antes de qualquer teste, confirme as duas antenas LoRa conectadas e apertadas.
 
-**Procedimento:**
-1. Ligar ambas estações a 1 m de distância
-2. Observar LEDs e monitor serial
-3. Afastar estações gradualmente (10 m, 50 m, 100 m, 500 m)
-4. Registrar RSSI e taxa de perda de pacotes
+## Testes Prioritarios
 
-### 2. Sequência de Ignição Completa
-**Objetivo:** Validar contagem regressiva de 5 segundos e acionamento do ignitor.
+### 1. Comunicacao LoRa Basica
+
+Objetivo: confirmar `PING/PONG` de forma estavel.
 
 Checklist:
-- [ ] Pressionar botão de ignição na Estação de Comando por 5 s completos
-- [ ] LED vermelho pisca em ambas estações durante contagem
-- [ ] Buzzer da Estação de Ignição emite 5 apitos (1 por segundo)
-- [ ] Ao final, GPIO16 da Estação de Ignição vai HIGH
-- [ ] LED vermelho fica sólido ao acionar ignitor
-- [ ] Usar **carga dummy** (lâmpada 12 V ou LED) no lugar do ignitor real
 
-**Procedimento:**
-1. Conectar lâmpada/LED ao GPIO16 da Estação de Ignição
-2. Pressionar e **segurar** botão de ignição
-3. Observar: LEDs, buzzers, e acionamento da carga
-4. Confirmar que lâmpada acende apenas após 5 s
+- [ ] Comando envia `PING` e ignicao responde `PONG`.
+- [ ] LED amarelo acende nas duas estacoes quando conectadas.
+- [ ] Ao desligar uma estacao, timeout de link ocorre conforme esperado.
+
+Procedimento:
+
+1. Ligar as duas estacoes a 1 m.
+2. Observar serial e LEDs.
+3. Repetir em 10 m, 50 m, 100 m e 500 m.
+4. Registrar RSSI e perdas.
+
+### 2. Sequencia de Ignicao Completa
+
+Objetivo: validar contagem e acionamento final.
+
+Checklist:
+
+- [ ] Botao mantido por 5 s.
+- [ ] LED vermelho pisca durante contagem.
+- [ ] Buzzer da ignicao emite 5 apitos.
+- [ ] Saida de ignicao aciona por 2 s.
+- [ ] Comando recebe `IGNITION_COMPLETE`.
+
+Procedimento:
+
+1. Conectar carga dummy na saida de ignicao.
+2. Segurar botao de ignicao por 5 s.
+3. Confirmar acionamento apenas no final da contagem.
 
 ### 3. Abort Manual
-**Objetivo:** Garantir que soltar o botão antes de 5 s cancela a ignição.
+
+Objetivo: garantir cancelamento ao soltar o botao.
 
 Checklist:
-- [ ] Pressionar botão de ignição
-- [ ] Soltar botão após 2-3 segundos
-- [ ] Estação de Comando envia `ABORT`
-- [ ] Estação de Ignição interrompe contagem
-- [ ] Ambas voltam ao estado `CONNECTED` (LED amarelo)
-- [ ] Ignitor **não** é acionado
 
-**Procedimento:**
-1. Iniciar sequência de ignição
-2. Soltar botão no 2º ou 3º apito
-3. Verificar que GPIO16 permanece LOW
-4. Repetir 5 vezes para consistência
+- [ ] Botao solto antes de 5 s envia `ABORT`.
+- [ ] Contagem para imediatamente.
+- [ ] Ignitor nao e acionado.
 
-### 4. Abort Automático por Timeout
-**Objetivo:** Estação de Ignição aborta se perder comunicação durante sequência.
+Procedimento:
 
-Checklist:
-- [ ] Iniciar sequência de ignição
-- [ ] Desligar Estação de Comando no 3º segundo
-- [ ] Estação de Ignição detecta timeout (2 s sem heartbeat)
-- [ ] LED vermelho pisca rapidamente (erro)
-- [ ] Buzzer emite padrão de erro
-- [ ] Ignitor **não** é acionado
+1. Iniciar contagem.
+2. Soltar no 2o ou 3o apito.
+3. Repetir cinco vezes.
 
-**Procedimento:**
-1. Iniciar sequência de ignição
-2. Desconectar antena ou desligar Estação de Comando após 2-3 s
-3. Observar comportamento da Estação de Ignição
+### 4. Abort por Timeout
 
-### 5. Indicadores Visuais e Sonoros
-**Objetivo:** Confirmar padrões de LEDs e buzzer conforme especificação.
+Objetivo: abortar em perda de `ARM_CONFIRMED`.
 
 Checklist:
-- [ ] **Verde:** acende ao ligar, permanece durante operação
-- [ ] **Amarelo:** acende quando conectado (heartbeats OK)
-- [ ] **Vermelho:** pisca durante ignição iminente, sólido ao acionar
-- [ ] **Buzzer Ignição:** 5 apitos durante contagem + tom longo ao acionar
-- [ ] **Buzzer Comando:** tom contínuo enquanto botão pressionado
 
-**Procedimento:**
-1. Testar cada estado individualmente via comandos seriais (debug)
-2. Testar sequência completa e documentar com vídeo
+- [ ] Durante contagem, interromper link/comando.
+- [ ] Ignicao detecta timeout (> 500 ms).
+- [ ] Estado de erro e sinalizado.
+- [ ] Ignitor nao e acionado.
 
-### 6. Teste de Alcance em Campo
-**Objetivo:** Determinar alcance máximo confiável.
+### 5. Alcance em Campo
+
+Objetivo: determinar alcance confiavel do enlace.
 
 Checklist:
-- [ ] Posicionar estações em LOS (linha de visão)
-- [ ] Aumentar distância: 50 m, 100 m, 200 m, 500 m, 1 km
-- [ ] Registrar RSSI e taxa de sucesso de pacotes
-- [ ] Executar sequência completa de ignição na distância máxima validada
 
-**Procedimento:**
-1. Usar tripé/suporte para estações
-2. Medir distância com GPS ou trena a laser
-3. Executar 10 ciclos de ignição (com carga dummy) em cada distância
-4. Registrar falhas em `docs/TESTES.md`
+- [ ] Executar testes em linha de visao.
+- [ ] Avaliar 50 m, 100 m, 200 m, 500 m e 1 km.
+- [ ] Registrar taxa de sucesso e RSSI.
 
-## Como Executar
+## Scripts de Bancada
+
+Arquivos da pasta `test/`:
+
+- `mp_lora_radio.py`: modulo comum de radio.
+- `mp_teste_conexao.py`: link `PING/PONG` com estatisticas.
+- `mp_teste_envio_dados.py`: envio `DATA` com `ACK` e retry.
+
+Uso em duas placas:
+
+1. Copiar `mp_lora_radio.py` e o script desejado.
+2. Ajustar `ROLE` no topo.
+3. `initiator` e `responder` para teste de conexao.
+4. `tx` e `rx` para teste de envio de dados.
+
+Os scripts seguem a configuracao de radio em `firmware/micropython/`.
+
+## Execucao
 
 ### Testes Automatizados
+
 ```bash
 cd test
-python run_tests.py --all         # todos os testes
-python run_tests.py --lora        # apenas comunicação LoRa
-python run_tests.py --ignition    # sequência de ignição
+python run_tests.py --all
+python run_tests.py --lora
+python run_tests.py --ignition
 ```
 
 ### Testes Manuais
-Seguir procedimentos descritos acima. Documentar resultados em `docs/TESTES.md`.
 
-## Segurança nos Testes
+Seguir os procedimentos acima e registrar resultado em `docs/README_TESTS.md`.
 
-⚠️ **NUNCA usar ignitor real durante testes!**
+## Seguranca
 
-- Sempre usar carga dummy (lâmpada, LED, resistor)
-- Confirmar que não há propelente próximo
-- Testar a >= 10 m de pessoas
-- Usar óculos de proteção ao manipular eletrônica energizada
-
-## Registro de Resultados
-
-Após cada sessão de testes, preencher tabela em `docs/TESTES.md` com:
-- Data
-- ID do teste
-- Resultado (pass/fail)
-- Observações
-- Link para logs/vídeos
+- Nunca usar ignitor real em bancada.
+- Sempre usar carga dummy.
+- Manter pessoas a pelo menos 10 m.
+- Usar EPI adequado durante testes energizados.

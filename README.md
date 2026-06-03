@@ -1,84 +1,71 @@
 # Serra Rocketry Ignitor
 
-![Status](https://img.shields.io/badge/status-em%20desenvolvimento-yellow)
-![Versão](https://img.shields.io/badge/versão-1.0.0-blue)
+Sistema de ignicao remota para foguetes experimentais.
 
-## Sobre
-Sistema de ignição remota para foguetes experimentais da Serra Rocketry.
+## Visao Geral
 
-A solução é formada por duas estações independentes que se comunicam via LoRa 433 MHz:
+Duas estacoes independentes se comunicam via LoRa 433 MHz:
 
-1. Estação de Comando (operada pelo operador em distância segura)
-2. Estação de Ignição (conectada fisicamente ao ignitor)
+| Estacao | Funcao | MCU |
+| --- | --- | --- |
+| Comando | Operacao remota e seguranca | Raspberry Pi Pico |
+| Ignicao | Acionamento do ignitor | ESP32-C3 SuperMini ou Raspberry Pi Pico |
 
-O objetivo é permitir ignição com redundância de segurança, confirmação de comunicação e feedback visual/sonoro durante toda a sequência.
+## Sequencia de Ignicao
 
-## Arquitetura
+1. Operador segura o botao por 5 s.
+2. Comando transmite `ARM_CONFIRMED` continuamente.
+3. Ignicao executa contagem regressiva (5 bipes).
+4. Rele aciona por 2 s.
+5. Ignicao envia `IGNITION_COMPLETE`.
 
-### Estação de Comando
-- Inicia a sequência de ignição por botão dedicado
-- Exige ação mantida por 5 segundos
-- Envia comando via LoRa e aguarda ACK
-- Exibe status por LEDs e buzzer
+## Comece Aqui
 
-### Estação de Ignição
-- Recebe comando da estação de comando
-- Executa contagem regressiva de 5 segundos
-- Aborta se o comando for interrompido
-- Aciona o ignitor ao fim da contagem
+| Passo | Guia |
+| --- | --- |
+| 1. Montar | [docs/INSTALL.md](./docs/INSTALL.md) |
+| 2. Gravar firmware | [docs/README_ENVIO.md](./docs/README_ENVIO.md) |
+| 3. Testar | [test/README.md](./test/README.md) |
+| 4. Diagnosticar problemas | [docs/troubleshooting.md](./docs/troubleshooting.md) |
 
-Para detalhes completos de pinagem, BOM, consumo, segurança e esquemáticos, consulte a documentação de hardware.
+## Estrutura do Repositorio
 
-## Sequência de Ignição (Resumo)
-1. Operador pressiona e mantém o botão de ignição por 5 s
-2. Estação de comando envia `ARM` via LoRa
-3. Estação de ignição confirma recebimento e inicia contagem
-4. Se o botão for solto antes do fim, procedimento é abortado
-5. Ao final de 5 s, a estação de ignição aciona o ignitor
+```text
+ignitor/
+├── docs/                 # Guias e referencias
+├── firmware/
+│   ├── micropython/      # Scripts oficiais (.py)
+│   └── data/             # Arquivos web/auxiliares
+├── hardware/             # BOM, pinagem e materiais fisicos
+├── software/             # Legado/compatibilidade
+└── test/                 # Scripts e procedimentos de teste
+```
 
 ## Componentes Principais
-- 2x Raspberry Pi Pico
-- 2x Módulos LoRa SX1278 (433 MHz)
-- 2x LEDs amarelos e 2x LEDs vermelhos
-- 2x Buzzers ativos
-- 2x Botões liga/desliga
-- 1x Botão de ignição momentâneo
-- 1x Relé para acionamento do ignitor
-- 2x Módulos TP4056 com proteção
-- Baterias Li-ion/LiPo (capacidade em definição)
-- Cases impressos em 3D
 
-## Estrutura do Repositório
-- `docs/`: documentação técnica e operacional
-- `firmware/`: código embarcado e interface web local
-- `hardware/`: esquemáticos, modelos, imagens e arquivos de fabricação
-- `software/`: ferramentas de apoio de software
-- `test/`: materiais de teste e validação
+| Qtd | Componente | Uso |
+| --- | --- | --- |
+| 1 | Raspberry Pi Pico | Estacao de Comando |
+| 1 | ESP32-C3 SuperMini | Estacao de Ignicao (principal) |
+| 2 | Modulo LoRa SX1278 | Comunicacao 433 MHz |
+| 2 | LED amarelo 5mm | Status de link |
+| 2 | LED vermelho 5mm | Status de ignicao |
+| 2 | Buzzer ativo 5V | Feedback sonoro |
+| 1 | Botao de ignicao 22 mm | Acionamento |
+| 1 | Rele/MOSFET | Saida para ignitor |
+| 2 | Modulo TP4056 | Carga de bateria |
 
-## Documentação
-- [Hardware: arquitetura, BOM e pinagem](./hardware/README.md)
-- [Instalação](./docs/INSTALACAO.md)
-- [API e protocolos](./docs/API.md)
-- [Testes](./docs/TESTES.md)
-- [Troubleshooting](./docs/TROUBLESHOOTING.md)
+Pinagem completa e BOM: [hardware/README.md](./hardware/README.md).
 
-## Segurança
-- O botão de ignição deve ser momentâneo (sem trava)
-- O comando de ignição deve permanecer ativo por toda a janela de 5 s
-- Em perda de comunicação/heartbeat, o sistema deve abortar
-- Testes devem ser feitos com carga dummy antes de ignição real
-- Manter distância operacional segura entre operador e foguete
+## Regras de Seguranca
 
-## Status do Projeto
-- [x] Arquitetura macro de duas estações definida
-- [x] BOM e pinagem iniciais documentados
-- [ ] Firmware de comando e ignição finalizado
-- [ ] Validação completa de comunicação LoRa
-- [ ] Validação elétrica em bancada e campo
-- [ ] Cases 3D finalizados para produção
+- Botao de ignicao deve ser momentaneo (sem trava).
+- O comando precisa ser mantido pelos 5 s completos.
+- Perda de sinal por mais de 500 ms deve abortar.
+- Sempre usar carga dummy antes de ignitor real.
+- Sempre conectar antena LoRa antes de energizar.
+- Manter distancia minima de 10 m entre operador e foguete.
 
-## Contribuição
-Consulte as diretrizes em [Boas Práticas Serra Rocketry](https://github.com/Serra-Rocketry/best-practices).
+## Projeto
 
-## Equipe
-Projeto desenvolvido pela equipe Serra Rocketry.
+Projeto da [Serra Rocketry](https://github.com/Serra-Rocketry).

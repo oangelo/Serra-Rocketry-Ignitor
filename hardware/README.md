@@ -1,198 +1,131 @@
 # Hardware - Serra Rocketry Ignitor
 
-## Arquitetura do Sistema
+## Arquitetura
 
-O sistema é composto por **duas estações independentes** que se comunicam via rádio LoRa:
+O sistema possui duas estacoes independentes conectadas por LoRa 433 MHz:
 
-### 1. Estação de Comando
-Operada remotamente pelo operador (distância segura do foguete).
-
-**Função:**
-- Iniciar sequência de ignição via botão dedicado
-- Monitorar status da Estação de Ignição
-- Fornecer feedback visual e sonoro ao operador
-
-**Componentes:**
-- 1x Raspberry Pi Pico
-- 1x Módulo LoRa SX1278 433 MHz
-- 1x Botão liga/desliga
-- 1x Botão de ignição (ação mantida por 5 s)
-- 2x LEDs: amarelo (conectado), vermelho (ignição iminente)
-- 1x Buzzer ativo
-- 1x Módulo TP4056 (com proteção) para recarregar a bateria
-- 1x Bateria (a definir capacidade)
-- Case impresso em 3D
-
-### 2. Estação de Ignição
-Conectada fisicamente ao ignitor do foguete.
-
-**Função:**
-- Receber comandos de ignição da Estação de Comando
-- Executar contagem regressiva (5 s) com avisos sonoros
-- Acionar o ignitor ao final da contagem
-- Abortar procedimento se comando for interrompido
-
-**Componentes:**
-- 1x Raspberry Pi Pico
-- 1x Módulo LoRa SX1278 433 MHz
-- 2x LEDs: amarelo (conectado), vermelho (ignição iminente)
-- 1x Buzzer ativo
-- 1x Relé para acionamento do ignitor
-- 1x Módulo TP4056 (com proteção) para recarregar a bateria
-- 1x Bateria (a definir capacidade)
-- Case impresso em 3D
+- Estacao de Comando: operada pelo usuario em area segura.
+- Estacao de Ignicao: fica proxima ao foguete e aciona o ignitor.
 
 ## Lista de Componentes (BOM)
 
-| Componente | Quantidade | Referência | Especificação | Link |
-|------------|------------|------------|---------------|------|
-| Raspberry Pi Pico | 2 | MCU1, MCU2 | RP2040 | [Raspberry Pi](https://www.raspberrypi.com/products/raspberry-pi-pico/) |
-| Módulo LoRa SX1278 | 2 | LORA1, LORA2 | 433 MHz | [Hoperf](https://www.hoperf.com/) |
-| LED Amarelo 5mm | 2 | LED_Y1, LED_Y2 | 20 mA | - |
-| LED Vermelho 5mm | 2 | LED_R1, LED_R2 | 20 mA | - |
-| Buzzer ativo 5V | 2 | BZ1, BZ2 | Piezo | - |
-| Botão Liga/Desliga | 2 | BTN_PWR1, BTN_PWR2 | 12V 20A | - |
-| Botão de Ignição | 1 | BTN_IGN | 22mm, 3-9V (5V), Momentary Reset, Vermelho | - |
-| Relé | 1 | K1 | Para ignitor (corrente a definir) | - |
-| Bateria | 12 | BAT1, BAT2 | A definir (LiPo/18650) | - |
-| Resistores 220Ω | 4 | R1-R4 | Para LEDs | - |
-| Antena LoRa | 2 | ANT1, ANT2 | 433 MHz | - |
-| Módulo TP4056 | 2 | CHG1, CHG2 | Carregador Li-ion/LiPo 1 célula (4,2 V), entrada 5 V, corrente de carga ajustável (até 1 A), proteção recomendada (DW01A+8205A) | - |
+| Item | Qtd | Aplicacao | Observacao |
+| --- | --- | --- | --- |
+| Raspberry Pi Pico | 1 | Estacao de Comando | MCU RP2040 |
+| ESP32-C3 SuperMini | 1 | Estacao de Ignicao | MCU principal de ignicao |
+| Modulo LoRa SX1278 433 MHz | 2 | Comando e Ignicao | Um por estacao |
+| Antena LoRa 433 MHz | 2 | Comando e Ignicao | Obrigatoria antes de energizar |
+| LED amarelo 5 mm | 2 | Status de link | Com resistor |
+| LED vermelho 5 mm | 2 | Status de ignicao | Com resistor |
+| Buzzer ativo | 2 | Feedback sonoro | Um por estacao |
+| Botao de ignicao momentaneo | 1 | Comando | Segurar por 5 s |
+| Rele ou MOSFET | 1 | Ignicao | Saida para ignitor |
+| TP4056 com protecao | 2 | Carga de bateria | Um por estacao |
+| Bateria (Li-ion/LiPo) | 2 | Alimentacao | Definir capacidade |
+| Resistores 220 ohms | 4 | LEDs | Dois por estacao |
 
-## Pinagem Raspberry Pi Pico
+## Pinagem
 
-### Estação de Comando
-| GPIO Pico | Conexão | Descrição |
-|-----------|---------|-----------|
-| GP0 | LoRa SPI RX | SPI MISO |
-| GP1 | LoRa SPI CS | Chip Select |
-| GP2 | LoRa SPI SCK | SPI Clock |
-| GP3 | LoRa SPI TX | SPI MOSI |
-| GP4 | LoRa RESET | Reset |
-| GP11 | LED Amarelo | Status: conectado |
-| GP12 | LED Vermelho | Status: ignição iminente |
-| GP13 | LED do botão | Status: ligado |
-| GP19 | Buzzer | Alerta sonoro |
-| GP14 | Botão Power | Liga/desliga |
-| GP26 | Botão Ignição | Comando de ignição (segurar 5 s) |
+### Estacao de Comando - Raspberry Pi Pico
 
-### Estação de Ignição
-| GPIO Pico | Conexão | Descrição |
-|-----------|---------|-----------|
-| GP0 | LoRa SPI RX | SPI MISO |
-| GP1 | LoRa SPI CS | Chip Select |
-| GP2 | LoRa SPI SCK | SPI Clock |
-| GP3 | LoRa SPI TX | SPI MOSI |
-| GP4 | LoRa RESET | Reset |
-| GP11 | LED Amarelo | Status: conectado com comando |
-| GP12 | LED Vermelho | Status: ignição iminente |
-| GP19 | Buzzer | Contagem regressiva |
-| GP26 | Gate Ignitor | Comando Relé |
+| Pino | Funcao |
+| --- | --- |
+| GP0 | LoRa MISO |
+| GP1 | LoRa CS |
+| GP2 | LoRa SCK |
+| GP3 | LoRa MOSI |
+| GP4 | LoRa RESET |
+| GP15 | LoRa DIO0 |
+| GP11 | LED amarelo |
+| GP12 | LED vermelho |
+| GP13 | Botao ignicao |
+| GP19 | Buzzer |
+| GP25 | LED onboard (link) |
 
+### Estacao de Ignicao - ESP32-C3 SuperMini
 
-## Sequência de Operação
+Pinagem oficial alinhada ao arquivo `firmware/micropython/estacao_ignicao_esp.py`.
 
-### Estados dos LEDs
-| Estado | LED Amarelo | LED Vermelho |
-|--------|-------------|--------------|
-| Desligado | OFF | OFF |
-| Ligado (idle) | OFF | OFF |
-| Conectado | ON | OFF |
-| Ignição iminente | ON | PISCA |
-| Ignição ativa | ON | ON |
-| Erro | OFF | PISCA |
+| Pino | Funcao |
+| --- | --- |
+| GPIO4 | LoRa SCK |
+| GPIO6 | LoRa MOSI |
+| GPIO5 | LoRa MISO |
+| GPIO7 | LoRa CS |
+| GPIO3 | LoRa RESET |
+| GPIO21 | LoRa DIO0 |
+| GPIO20 | LED amarelo |
+| GPIO0 | LED vermelho |
+| GPIO1 | Buzzer |
+| GPIO10 | Rele/MOSFET (ignitor) |
+| GPIO8 | LED interno de link |
 
-### Sequência de Ignição
+### Estacao de Ignicao - Raspberry Pi Pico (legado)
 
-1. **Operador pressiona botão de ignição na Estação de Comando**
-   - Botão deve ser **mantido pressionado por 5 segundos**
-   - LED vermelho começa a piscar
-   - Buzzer emite tom contínuo
+| Pino | Funcao |
+| --- | --- |
+| GP0 | LoRa MISO |
+| GP1 | LoRa CS |
+| GP2 | LoRa SCK |
+| GP3 | LoRa MOSI |
+| GP4 | LoRa RESET |
+| GP15 | LoRa DIO0 |
+| GP11 | LED amarelo |
+| GP12 | LED vermelho |
+| GP19 | Buzzer |
+| GP26 | Rele/MOSFET (ignitor) |
+| GP25 | LED onboard (link) |
 
-2. **Estação de Comando envia sinal LoRa para Estação de Ignição**
-   - Pacote com comando `ARM`
-   - Requer confirmação (ACK) da Estação de Ignição
+## Sequencia de Operacao
 
-3. **Estação de Ignição recebe comando e inicia contagem**
-   - LED vermelho pisca rapidamente
-   - Buzzer emite **5 apitos** (1 por segundo) = contagem regressiva
-   - A cada segundo, verifica se comando ainda está ativo
+1. Comando envia `ARM_CONFIRMED` enquanto o botao e mantido.
+2. Ignicao confirma com `ACK` e inicia contagem de 5 s.
+3. Se houver `ABORT` ou perda de sinal > 500 ms, ciclo e cancelado.
+4. Ao final da contagem, saida de ignicao ativa por 2 s.
+5. Ignicao envia `IGNITION_COMPLETE`.
 
-4. **Durante a contagem (5 s):**
-   - Se botão na Estação de Comando for **solto**: abortado
-   - Estação de Ignição envia mensagem de abort
-   - Ambas as estações voltam ao estado "Conectado"
+## Seguranca
 
-5. **Ao final dos 5 segundos:**
-   - LED vermelho fica **sólido** em ambas estações
-   - Estação de Ignição aciona o ignitor (GPIO16 HIGH)
-   - Buzzer emite tom longo de confirmação
+- Sempre conectar antena LoRa antes de energizar.
+- Usar botao momentaneo (sem trava).
+- Testar com carga dummy antes de ignitor real.
+- Manter distancia minima de 10 m em testes operacionais.
 
-6. **Após ignição:**
-   - Sistema aguarda 3 s e retorna ao estado "Conectado"
+## Galeria (Tamanho Padronizado)
 
-## Segurança
+Todas as imagens abaixo usam largura padrao de 320 px para manter consistencia visual no documento.
 
-- Botão de ignição deve ser do tipo **momentâneo** (não trava)
-- Ignição só ocorre se comando for mantido por toda a sequência (5 s)
-- Comunicação LoRa bidirecional: Estação de Ignição confirma recebimento
-- Timeout: se Estação de Ignição não receber heartbeat por 2 s, aborta
-- Sensor de continuidade (opcional): verifica se ignitor está conectado antes de armar
+<!-- markdownlint-disable MD033 -->
 
-## Consumo de Energia
+### Raspberry Pi Pico (Comando)
 
-**Estimativas iniciais (a validar):**
-- Operação normal (conectado): ~50 mA @ 3.3 V
-- Transmissão LoRa: ~120 mA (picos)
-- Autonomia estimada: 6-8 h com bateria 1000 mAh
+<img src="./images/pipico.png" width="320" alt="Raspberry Pi Pico" />
 
-### Carregamento com TP4056
+### Modulo LoRa SX1278
 
-- Cada estação usa um TP4056 dedicado (CHG1 e CHG2) para 2 células Li-ion/LiPo (3,7 V nominal).
-- Conexão típica: `IN+ / IN-` (5 V da porta USB), `BAT+ / BAT-` (bateria), `OUT+ / OUT-` (alimentação da carga) quando a placa tiver proteção integrada.
-- Corrente de carga recomendada para bateria de 1000 mAh: 0,5 A a 1,0 A (0,5C a 1C), respeitando especificação da bateria.
-- Preferir módulos com proteção (DW01A + 8205A) para reduzir risco de sobrecarga, descarga profunda e curto.
+<img src="./images/lora.png" width="320" alt="Modulo LoRa SX1278" />
 
-## Galeria de Componentes
+### Botao de Energia
 
-### Raspberry Pi Pico
-<img src="./images/pipico.png" width="220" alt="Raspberry Pi Pico"/>
+<img src="./images/power-button.avif" width="320" alt="Botao de energia" />
 
-Microcontrolador dual-core ARM Cortex-M0+ (RP2040), 264KB SRAM, 2MB Flash.
+### Botao de Ignicao
 
-### Módulo LoRa SX1268
-<img src="./images/lora.png" width="220" alt="Módulo LoRa SX1268"/>
+<img src="./images/ignition-button.png" width="320" alt="Botao de ignicao" />
 
-Transceptor LoRa de longo alcance operando em **433 MHz**. Chip Semtech SX1268.
+### Esquematico - Estacao de Comando
 
-### Botão Liga/Desliga
-<img src="./images/power-button.avif" width="220" alt="Botão Liga/Desliga"/>
+<img src="./images/schematics/estacao-comando_bb.png" width="320" alt="Esquematico da estacao de comando" />
 
-Botão de potência **12V 20A** para controle de energia das estações.
+### Esquematico - Estacao de Ignicao
 
-### Botão de Ignição
+<img src="./images/schematics/estacao-ignicao_bb.png" width="320" alt="Esquematico da estacao de ignicao" />
 
-<img src="./images/ignition-button.png" width="220" alt="Botão de Ignição"/>
+<!-- markdownlint-enable MD033 -->
 
-Botão momentâneo (Momentary Reset), **22mm**, vermelho, **3-9V (5V)**. Usado exclusivamente na Estação de Comando para iniciar a sequência de ignição.
+## Pastas de Hardware
 
-## Esquemáticos
-
-### Estação de comando
-
-<img src="./images/schematics/estacao-comando_bb.png" width="320" alt="Esquemático fritzing, caixa de comando"/>
-
-### Estação de ignicão
-
-<img src="./images/schematics/estacao-ignicao_bb.png" width="320" alt="Esquemático fritzing, caixa de ignição"/>
-
-## Arquivos de Fabricação
-
-- [Modelos 3D dos cases](./3d_models/) - *A criar*
-
-## Notas Importantes
-
-- **Sempre conectar antena LoRa antes de energizar** (dano ao módulo)
-- Isolar circuito do ignitor via relé
-- Testar sequência completa com carga dummy (lâmpada) antes de uso real
-- Manter distância mínima de 10 m entre operador e foguete
+- [3d_models](./3d_models): modelos 3D dos cases.
+- [fritzing](./fritzing): arquivos de esquematico/layout.
+- [gerbers](./gerbers): arquivos de fabricacao PCB.
+- [images](./images): imagens e esquemas.
